@@ -1,24 +1,61 @@
-\chapter{Introduction} 
+\chapter{Introduction}
 \label{chapter:introduction}
 
-Introduction \cite{sample_ref}.
+{\color{red}Some basic introduction. \\Fill in later\\Ideally \\at least \\this number\\ of lines}
 
-\section{Motivation} 
+\section{Motivation}
 \label{sec:motivation}
 
-Motivation of Thesis.
+Hyperledger Fabric employs a complicated network architecture. It's key part is the ordering service. Every transaction must eventually be sent to the orderer to be included in a block. Moreover, to avoid forks there can be only one ordering service in Fabric's network.
 
-\section{Problem Statement} 
+Also, since Fabric's transaction lifecycle separates the endorsement phase from the ordering or "adding to a block" phase and because of the extra network delays caused by this extra step, a lot of transactions become invalid by the time they reach the commit phase.
+
+These factors make the ordering service a natural bottleneck and a prime target for optimization.
+
+\section{Problem Statement}
 \label{sec:problemStatement}
 
-Problem Statement of Thesis.
+The project targets a specific situation when the exact order of transactions is not relevant. For these cases, the best optimization is to remove the ordering phase altogether.
+
+Even in the case when the order of transactions can be arbitrary, we would like to retain some properties of the original system.
+
+\begin{itemize}
+  \item Require endorsement of transactions according to a policy
+  \item Keep a ledger of transactions
+  \item Tamper-proof the ledger
+\end{itemize}
+
+The goal of the project is to create a premissioned blockchain based on Hyperledger Fabric that implements a transaction lifecycle without the ordering phase.
 
 \section{Approach}
  \label{sec:approach}
 
-Your Approach overview.
+\begin{itemize}
+  \item Assume only conflict-free transactions.
+  \item The world state is represented by a conflict-free replicated data type (CRDT).
+  \item Keep the ordering service for configuration transactions and chaincode initialization.
+  \item Keep the blockchain, pack transactions into blocks.
+\end{itemize}
+
+ Since there is no ordering system, there will be no consensus on the exact order of transactions. Nonetheless, this is not a problem, since CRDTs guarantee a consensus on the world state, provided that all transactions are committed to all peers. The approach is then to keep a separate, local blockchain on each peer node with it's own order.
+
+ The new transaction lifecycle is as follows.
+ The client sends transaction proposals to all endorsing peers as usual and collects endorsments. The endorsed transaction is then sent to all peers in the network. A peer receives the endorsed transaction, checks the signatures according to chain's policy and commits the transaction. After the transaction is committed, the peer send the client a receipt with the hash of the block the transaction was commited to. The client consideres the transaction as committed once it receives receipts from all peers.
 
 \section{Organization}
  \label{sec:organization}
+ Chapter \ref{chapter:background} describes Hyperledger Fabric's network architecture and provides information about internal workings of the system.
 
-Organization of Thesis.
+ Chapter \ref{chapter:relatedWork} mentiones related work and precursors for this project.
+
+ Chapter \ref{chapter:approach} details the work done in this project.
+
+ \setlength{\parindent}{1em}
+ \indent Section \ref{section:ap1} explains design decisions, problems and solutions of the initial implementation of the system.
+
+ \indent Section \ref{section:ap2} discusses subsequent improvements on the initial design.
+ \setlength{\parindent}{0pt}
+
+ Chapter \ref{chapter:evaluation} describes the benchmark setup, benchmark chaincode and provides results of the testing.
+
+ Chapter \ref{chapter:summary} discusses results of the project and outlines possible follow-up works.
