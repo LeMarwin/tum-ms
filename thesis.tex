@@ -70,20 +70,22 @@
 
 \newcommand\tab[1][1cm]{\hspace*{#1}}
 
-\newcommand{\bildklein}[3]{
+\newcommand{\bildklein}[4]{
 	\begin{figure}[hp]
 	\begin{center}
 	\includegraphics[width=0.5\textwidth]{#1}
 	\end{center}
 	\caption[#2]{#3}
+	\label{#4}
 	\end{figure}
 }
-\newcommand{\bildgross}[3]{
+\newcommand{\bildgross}[4]{
 	\begin{figure}[hp]
 	\begin{center}
 	\includegraphics[width=0.95\textwidth]{#1}
 	\end{center}
 	\caption[#2]{#3}
+	\label{#4}
 	\end{figure}
 }
 
