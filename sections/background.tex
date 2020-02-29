@@ -78,8 +78,8 @@ SignedProposal is a structure sent by a client at the beginning of a transaction
 
 The Endorser subsystem executes the proposal, produces a read-write set as a result of the execution and creates a ProposalResponse which is used as an endorsement of the proposal by the client.  This subsystem has no direct access to the ledger. Access is provided indirectly through a transaction simulator (TxSimulator) produced by an endorser Support interface.
 
-The Gossip subsystem handles all communications between all nodes of the network: peers and orderers alike. It is a big and intricate subsystem in and of itself and consists of many moving parts. However, for the purposes of the project it is enough to know that Gossip handles block distribution and has capabilities to commit a block to the ledger.
+The Gossip subsystem handles all communications between all nodes of the network: peers and orderers alike. It is a big and intricate subsystem in and of itself and consists of many moving parts. However, for the purposes of the project, it is enough to know that Gossip handles block distribution and has capabilities to commit a block to the ledger.
 
 KV-ledger subsystem implements PeerLedger interface and handles all the steps of committing a block to the ledger, described in \ref{section:flow}. It is at this stage when each transaction goes through MVCC validation when versions of keys from read set are compared with versions from the ledger for consistency
 
-It is important to note, that the Gossip service is a singleton and it is possible to access it globally from any part of the peer. However the Endorser does not access it in it's code. On the contrary, there is an instance of KV-ledger subsystem for each ledger hosted on the peer and it's not accessible to write to from the Endorser.
+It is important to note, that the Gossip service is a singleton and it is possible to access it globally from any part of the peer. However, the Endorser does not access it in its code. On the contrary, there is an instance of KV-ledger subsystem for each ledger hosted on the peer and it's not accessible to write to from the Endorser.
