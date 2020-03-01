@@ -2,7 +2,7 @@
 \label{chapter:background}
 
 \section{Network}
-\label{section:network}
+\label{sec:network}
 
 In this section, we will dissect a basic network architecture. This example is based on the network used in chapter \ref{chapter:evaluation}. The section is based on \cite{fabricdocs:network}
 
@@ -39,7 +39,7 @@ Certificate authority issues and confirms certificates that are used to establis
 \newpage
 
 \section{Transaction flow}
-\label{section:flow}
+\label{sec:flow}
 This section describes a transaction flow or a transaction's lifecycle. The section is based on \cite{fabricdocs:flow},  \cite{fabricdocs:peer} and \cite{fabricdocs:orderer}
 
 Fabric's transaction lifecycle consists of three phases
@@ -57,7 +57,7 @@ When the client has collected all the required endorsements it checks them for c
 When a peer receives a block it goes through all transactions in the exact order they appear in the block. The peer checks signatures of a transaction and makes sure that it complies with the endorsement policy. Read-write sets from different endorsements are also checked for consistency. If a transaction passes all checks, the peer attempts to apply it to the ledger. Before applying a transaction, a ledger consistency check is done. The peer checks versions of the read keys to see if any of the keys were modified after the proposal was endorsed. If ledger state is compatible with the transaction, the transactions write set is applied and the transaction is marked as valid within the block. Invalid transactions are not applied but are marked as invalid and kept for accounting. The block is then appended to the chain and stored. Finally, the peer generates events, signaling to all subscribers which transactions were commited. This concludes the final phase of a transaction's lifecycle.
 
 \section{The structure of a peer}
-
+\label{sec:back-peer}
 This segment describes some internal parts of a peer that are necessary for understanding the original work of this project.
 
 A peer implements a number of services and consists of many subsystems. Endorser, Gossip, and KV-ledger subsystems are the relevant ones for the work.
@@ -80,6 +80,6 @@ The Endorser subsystem executes the proposal, produces a read-write set as a res
 
 The Gossip subsystem handles all communications between all nodes of the network: peers and orderers alike. It is a big and intricate subsystem in and of itself and consists of many moving parts. However, for the purposes of the project, it is enough to know that Gossip handles block distribution and has capabilities to commit a block to the ledger.
 
-KV-ledger subsystem implements PeerLedger interface and handles all the steps of committing a block to the ledger, described in \ref{section:flow}. It is at this stage when each transaction goes through MVCC validation when versions of keys from read set are compared with versions from the ledger for consistency
+KV-ledger subsystem implements PeerLedger interface and handles all the steps of committing a block to the ledger, described in \ref{sec:flow}. It is at this stage when each transaction goes through MVCC validation when versions of keys from read set are compared with versions from the ledger for consistency
 
 It is important to note, that the Gossip service is a singleton and it is possible to access it globally from any part of the peer. However, the Endorser does not access it in its code. On the contrary, there is an instance of KV-ledger subsystem for each ledger hosted on the peer and it's not accessible to write to from the Endorser.
