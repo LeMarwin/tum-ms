@@ -1,0 +1,302 @@
+\chapter{Changes to the Fabric}\label{chapter:fabric}
+\section{Approach}
+As stated in \ref{sec:approach}, the goal chosen by the project is to remove the ordering service altogether.
+
+However, doing so is impractical. The ordering system is not only used to issue blocks but also serves as an administrative point for the network. To remove the ordering service completely means losing the system responsible for creating channels, uploading chaincodes to the peers and issuing configuration blocks.
+
+The overall approach is to make as little changes to the code as possible.
+Thus it was decided to keep the ordering system intact for administrative purposes, but to remove it from transaction flow.
+
+\section{Consequences of a lack of ordering service}
+\label{sec:app-noorder}
+
+A natural way to remove the ordering service is to give peers a way of establishing consensus regarding the order of transactions. However, implementing a PBFT or PoW consensus for peers is well beyond the scope of the project.
+
+Without a way of establishing consensus, there is no way for peers to agree on the order of transactions. We circumvent this obstacle by limiting the domain of possible world states and transactions.
+
+In the project, the world state is represented by a CRDT and all transactions must be conflict-free. This will allow peers to eventually agree on the world state while receiving transactions in a different order. Provided, of course, that all peers have the same set of transactions, i.e. they receive all transactions submitted to the network.
+
+Eliminating the ordering of transactions seems counterintuitive in a blockchain setting. The purpose of blockchain is to establish a canonical order of transactions and to make sure it is the same all nodes of the network.
+
+At first, it seemed that there is no point in keeping the blockchain at all. In which case the system devolves into a CRDT-based replicated database.
+
+After further considerations, it was decided to keep the blockchain's ledger as a means of keeping track of all the transactions and for auditing purposes. This decision also aligns with the "change as little as possible" approach, chosen by the project.
+
+However, there will be no canonical chain or ledger among peers. The solution is to make each peer keep its own local ledger. The downside of this solution is that peers will not be able to gossip blocks between each other. It becomes the job of the client to ensure that all peers received all transactions from the client, or else they will disagree on the world state.
+
+\section{New transaction flow}
+\label{sec:app-flow}
+
+We propose a modified transaction flow. The original one is explained in \ref{sec:flow}.
+
+The new transaction lifecycle is, roughly as follows
+
+\begin{itemize}
+  \item Proposal
+  \item Broadcast
+  \item Commit
+\end{itemize}
+
+The Propose phase is exactly the same as the original one.
+
+The client collects proposal responses and creates a transaction envelope as usual.  But instead of sending it to the ordering service, the client broadcasts the transaction envelope to all peers of the network.
+
+A peer receives the envelope and does signature validation as per the original protocol. However, the peer does not perform any MVCC consistency check. Since we assume only conflict-free transactions, there is no point in doing consistency checks. The burden of keeping transactions conflict-free lies on the chaincode creator.
+
+The peer checks signatures and directly commits the transaction to its local ledger. The client receives a receipt containing the height at which the transaction was committed along with the hash of the block.
+
+When the client receives receipts from all the peers it considers the transaction lifecycle completed.
+
+\section{Endorser augmentation}
+\label{sec:augm}
+Instead of adding an entirely new component to a peer that handles transaction commitment it is better to augment an existing component.
+
+Since the Endorser service is the part of a peer that is exposed to the client as described in \ref{sec:back-peer}, it was decided to use it as the host to the new functionality.
+
+It has to keep track of all blocks coming from the ordering service to commit them to the local ledger. So that they don't go the usual commit route and disrupt the system.
+
+It also has to be notified when its peer is asked to join a new channel so it can create a new ledger.
+
+This is done by connecting the Gossip system with the Endorser system via channels.
+
+We have added two Go channels to the Gossip system:
+\begin{itemize}
+  \item joinChan
+  \item blockChan
+\end{itemize}
+
+Since the Gossip system is accessible from any part of the peers code, these channels are also accessible and the Endorser can listen to incoming messages.
+
+The Gossip sends a message with the name of the new Fabric channel to the Endorser through $joinChan$.
+When the Endorser receives a message from $joinChan$ it creates a new $BlockProcessor$ for that Fabric channel.
+
+The $BlockProcessor$ handles incoming blocks and transaction envelope, commits them to the ledger, produces receipts and keeps track of the chain. Details about the $BlockProcessors'$ implementation are in a separate segment.
+
+The Gossip system also sends any incoming blocks from the orderer service to the Endorser system via $blockChan$.
+The Endorser redirects the incoming blocks to the appropriate $BlockProcessor$ to be committed to the ledger.
+
+We have added a new RPC endpoint to the Endorser service.
+
+\begin{lstlisting}
+rpc SendEnvelope(common.Envelope) returns (BlockReceipt) {}
+\end{lstlisting}
+
+It receives an envelope, checks signatures, commits the transaction to the appropriate ledger and returns a receipt structure $BlockReceipt$.
+
+\begin{lstlisting}
+message BlockReceipt {
+
+  // Id of the peer sending the receipt
+  PeerID id = 1;
+
+  // Header of the block with the transaction from the request
+  common.BlockHeader header = 2;
+
+  // Response structure with additional information
+  Response response = 3;
+}
+
+// A response with a representation similar to an HTTP response that can
+// be used within another message.
+message Response {
+
+   // A status code that should follow the HTTP status codes.
+   int32 status = 1;
+
+   // A message associated with the response code.
+   string message = 2;
+
+   // A payload that can be used to include metadata with this response.
+   bytes payload = 3;
+}
+\end{lstlisting}
+
+The handler for this endpoint is straightforward. Receive an envelope, send it to the appropriate $BlockProcessor$, wait until the transaction is committed, receive the block header from the $BlockProcessor$ and send back the receipt.
+
+The Endorser communicates with a $BlockProcessor$ via Go channels.
+It sends an envelope via $Enqueue$ method of $BlockProcessor$ and receives back a Go channel where the block header will be sent to once the envelope is committed to the ledger.
+
+\section{BlockProcessorSupport interface}
+\label{sec:bp-interface}
+
+Block processors implement $BlockProcessorSupport$ interface.
+
+\begin{lstlisting}
+type BlockProcessorSupport interface {
+  AttachBlock (block *cb.Block)
+  Enqueue (env *cb.Envelope) (chan *cb.BlockHeader, error)
+  Start()
+  Halt()
+}
+\end{lstlisting}
+
+Let's dissect each method.
+
+\begin{lstlisting}
+  AttachBlock (block *cb.Block)
+\end{lstlisting}
+
+This method is used to commit incoming blocks from the ordering service. These blocks contain configurations and other administrative information.
+
+\begin{lstlisting}
+  Enqueue (env *cb.Envelope) (chan *cb.BlockHeader, error)
+\end{lstlisting}
+
+This method is used to enqueue an envelope and return to the caller a channel where the header of the resulting block will be sent to.
+
+\begin{lstlisting}
+  Start()
+  Halt()
+\end{lstlisting}
+
+These two methods are used to start and stop the block processor.
+
+\section{Fist implementation}
+
+The first approach to the block processor was to pack each transaction in a separate block and commit that block to the ledger right away.
+
+The details of this implementation will not be provided here since this approach proved to be horribly inefficient.
+
+Commitment to the ledger, that is an actual write operation to the disk is the slowest part and also the only part that has to be sequential.
+
+Clients raced to get their transaction committed and only one of them succeeded for each commitment of a block.
+
+This is fine in a scenario with only one app, but the moment we introduce parallel clients, the throughput dramatically decreases.
+
+Benchmarks showed a throughput of around 10 TPS for a scenario with 10 clients and 100 TPS input. Moreover, most of the transactions timed out.
+
+While this approach proved the concept, it needed improvements.
+
+\section{Improvements}
+\label{sec:bp-impr}
+
+The second iteration of block processors mostly mimics the implementation of the solo orderer.
+
+Envelopes are collected and committed in batches. Once a set amount of transaction envelopes is collected or a set timeout has elapsed, the current batch is packed into a block and committed to the ledger.
+
+Once the block is committed, all client handlers get notified about the block via channels returned by the $Enqueue$ method. See \ref{sec:bp-interface}.
+
+While this improvement greatly increased the throughput already, an additional improvement was implemented.
+
+Previously, the main thread of a block processor waited until the current block is committed before starting collecting envelopes for the next one. In the final implementation, once a block is created, the main thread immediately starts collecting the batch for the next block, while the previous one is being committed.
+
+\section{Final implementation}
+
+We introduce two new parameters to the peer, passed via environment variables.
+
+\begin{itemize}
+  \item CORE\_PEER\_BP\_SIZE -- sets the number of transactions in a batch
+  \item CORE\_PEER\_BP\_TIMEOUT -- sets the timeout
+\end{itemize}
+
+Default values are 10 and 0.25s respectively.
+
+The implementation is in the endorser package and specifically in the
+$core/endorser/block\_processor.go$ file.
+
+\newpage
+The structure implementing the BlockProcessor interface is as follows:
+
+\begin{lstlisting}
+type blockProcessor struct {
+
+  // The last block of the chain
+	lastBlock      *cb.Block
+
+  // Requests with an envelope and a return channel
+	sendChan       chan *blockReq
+
+  // Blocks, created by the blockProcessor to be committed
+	blockChan      chan *cb.Block
+
+  // Blocks, incoming from the Gossip system
+  extraBlockChan chan *cb.Block
+
+  // An exit or halt signal channel
+	exitChan       chan struct{}
+
+  // Reference to the Gossip service. Inclueded here for ease of access
+	gossipService  service.GossipService
+
+  // Id of the channel served by the blockProcessor
+	chainId        string
+
+  // A mutex to guard the lastBlock reference
+  mutex sync.Mutex
+
+  // A slice with the current batch
+	currentBatch   []*blockReq
+
+  // Batch timeout
+	batchTimeout   time.Duration
+
+  // Batch size
+	batchSize      int
+}
+\end{lstlisting}
+
+\newpage
+BlockReq is a simple structure with the envelope to commit and a response channel for the block header.
+
+\begin{lstlisting}
+type blockReq struct {
+  reqEnv *cb.Envelope
+  respChan chan *cb.BlockHeader
+}
+\end{lstlisting}
+
+\subsection*{Enqueue}
+
+Enqueue method creates a new response channel and a $blockReq$ structure. The request structure is then sent to $sendChan$ channel and the response channel returned to the caller.
+
+\subsection*{The main loop}
+
+The main loop listens to the $sendChan$ channel.
+
+When the processor receives a $blockReq$ via $sendChan$ it appends the request to the current batch. Afterward, if the batch size is collected the thread calls $commitBatch$ method and the timer is set to $nil$. If the batch is not yet completed, the thread sets the timer to $batchTimeout$.
+
+When a timer has run out the current batch is committed
+
+\subsection*{Block committer}
+
+The block committer runs in a goroutine separate from the main loop. It receives blocks from two channels: $blockChan$ and $extraBlockChan$.
+
+When the committer receives a block from $extraBlockChan$ channel, it changes the blocks header so it is consistent with the local chain, commits the block and updates the $lastBlock$ reference once it gets the mutex.
+
+When the committer receives a block from the $blockChan$ channel it is simply committed. The reference update is already handled in $commitBatch$ function
+
+The blocks are committed by calling the $StoreRawBlock$ method of the $GossipService$ interface.
+
+\subsection*{commitBatch}
+
+The commitBatch function creates a block with the current batch and updates the $lastBlock$ reference. This part is guarded by the mutex, so that the block committer and the $commitBatch$ function do not interfere.
+
+The block is then sent to the committer via $blockChan$ and the resulting block header is broadcastedto all return channels from the batch.
+
+The block is sent to a channel in a separate goroutine so that the main thread can continue and start collecting the next batch while the separate goroutine waits for the committer to receive the block.
+
+\subsection*{AttachBlock}
+
+This method simply sends the block to the $extraBlockChan$ channel.
+
+\section{The Gossip service}
+
+The Gossip service is modified to handle the new protocol.
+
+It now holds two additional Go channels, which are created during the initialization of the peer and passed to the Gossips initialization functions.
+
+One Go channel is used to signal to the main thread that the peer has joined a new Fabric channel.
+
+The second one is used to forward all incoming blocks from the orderer to the main thread.
+
+It is important to create both channels only once and pass them to the Gossip service since some components of the service are reinitialized. In particular, each peer starts as a leader peer in the network and finds out later whether it is the leader or not. Non-leader peers reinitialize the gossip component for their new role. If the channels in question were created from withing the Gossip initialization and their references were later passed to other components, they would become invalid during the reinitialization of non-leaders gossip components.
+
+Both channels are created in $serve$ function from the $node$ package, located in $peer/node/start.go$.
+
+Two goroutines are created to handle the channels.
+
+One listens to the "Join channel" messages and calls $AddBlockProcessor$ method of the Endorser server
+
+The other receives blocks from the Gossip service and redirects them to the $AttachBlock$ method of the Endorser. This method is not the same as the $AttachBlock$ method of the $BlockProcessor$ interface.
+
+Another important change is that the Gossip service implementation no longer commits the blocks itself. All blocks are committed by the respective Block Processor. The Gossip service merely sends all blocks from the Orderer via the Go channel to the main thread of the peer.
