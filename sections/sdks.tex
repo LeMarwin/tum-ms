@@ -1,3 +1,44 @@
-\chapter{Changes to the SDK and Caliper}\label{chapter:sdks}
-\section{Fabric SDK}\label{chapter:sdk}
+\chapter{Changes to the toolchain}\label{chapter:sdks}
+
+The Fabrics toolchain was also modified to enable new functionality.
+
+As with the approach to Fabric, the approach to the toolchain was to minimize changes and to keep the original functionality intact.
+
+\section{Fabric SDK Node}\label{chapter:sdk}
+
+Originally with fabric-sdk-node transactions get committed via \textbf{submitTransaction} function of the Contract class.
+
+We have added a new function, called \textbf{submitUnorderedTx} which creates a transaction as per usual but uses \textbf{submitUnordered} function of the Transaction class.
+
+\textbf{submitUnordered} is a modification of the original submit function.
+It goes roughly the same route as the original one except instead of submitting the transaction to the orderer via \textbf{sendTransaction} function it sends the transaction to all peers of the channel via \textbf{sendUnorderedTransaction} function from the \textbf{Channel} class.
+
+The \textbf{sendUnorderedTransaction} function employs the new endpoint described in \ref{sec:augm} and \textbf{Promise.allSettled} to collect all responses from the peers before resolving the promise.
+
 \section{Caliper}\label{chapter:caliper}
+
+Caliper uses it's own functions to submit transactions so they had to be changed as well.
+
+As with Fabric SDK Node, the changes are minimal. Caliper uses \textbf{invokeSmartContract} functions either from the blockchain.js module or from the fabric-ccp/fabric.js module, depending on the version of Fabric.
+
+An unordered version of this function is added. \textbf{invokeSmartContractUnordered} follows the original function but uses \textbf{\_submitSingleTransactionUnordered} instead of the original one.
+
+\textbf{\_submitSingleTransactionUnordered} again follows the original function, except it calls the \textbf{sendUnorderedTransaction} from the new fabric-sdk-node client.
+
+In addition, some redundant checks were removed and the client now does not listen to block events from the network, since it gets confirmation of commitment directly as a result of the call.
+
+\section{HyperLedgerLab}\label{chapter:hll}
+
+HyperLedgerLab is practically unchanged.
+
+Two new parameters introduced in \ref{sec:bp-fin} are added to the template of a peer's configuration.
+
+They can be provided in \textit{inventory/blockchain/group\_vars/blockchain-setup.yaml} via
+
+\begin{lstlisting}
+
+# Block processor's configs
+fabric_peer_bp_size: "\"50\""
+fabric_peer_bp_timeout: "0.2s"
+
+\end{lstlisting}
