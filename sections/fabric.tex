@@ -67,13 +67,13 @@ We have added two Go channels to the Gossip system:
 
 Since the Gossip system is accessible from any part of the peers code, these channels are also accessible and the Endorser can listen to incoming messages.
 
-The Gossip sends a message with the name of the new Fabric channel to the Endorser through $joinChan$.
-When the Endorser receives a message from $joinChan$ it creates a new $BlockProcessor$ for that Fabric channel.
+The Gossip sends a message with the name of the new Fabric channel to the Endorser through \textbf{joinChan}.
+When the Endorser receives a message from \textbf{joinChan} it creates a new \textbf{BlockProcessor} for that Fabric channel.
 
-The $BlockProcessor$ handles incoming blocks and transaction envelope, commits them to the ledger, produces receipts and keeps track of the chain. Details about the $BlockProcessors'$ implementation are in a separate segment.
+The \textbf{BlockProcessor} handles incoming blocks and transaction envelope, commits them to the ledger, produces receipts and keeps track of the chain. Details about the \textbf{BlockProcessors'} implementation are in a separate segment.
 
-The Gossip system also sends any incoming blocks from the orderer service to the Endorser system via $blockChan$.
-The Endorser redirects the incoming blocks to the appropriate $BlockProcessor$ to be committed to the ledger.
+The Gossip system also sends any incoming blocks from the orderer service to the Endorser system via \textbf{blockChan}.
+The Endorser redirects the incoming blocks to the appropriate \textbf{BlockProcessor} to be committed to the ledger.
 
 We have added a new RPC endpoint to the Endorser service.
 
@@ -81,7 +81,7 @@ We have added a new RPC endpoint to the Endorser service.
 rpc SendEnvelope(common.Envelope) returns (BlockReceipt) {}
 \end{lstlisting}
 
-It receives an envelope, checks signatures, commits the transaction to the appropriate ledger and returns a receipt structure $BlockReceipt$.
+It receives an envelope, checks signatures, commits the transaction to the appropriate ledger and returns a receipt structure \textbf{BlockReceipt}.
 
 \begin{lstlisting}
 message BlockReceipt {
@@ -111,15 +111,15 @@ message Response {
 }
 \end{lstlisting}
 
-The handler for this endpoint is straightforward. Receive an envelope, send it to the appropriate $BlockProcessor$, wait until the transaction is committed, receive the block header from the $BlockProcessor$ and send back the receipt.
+The handler for this endpoint is straightforward. Receive an envelope, send it to the appropriate \textbf{BlockProcessor}, wait until the transaction is committed, receive the block header from the \textbf{BlockProcessor} and send back the receipt.
 
-The Endorser communicates with a $BlockProcessor$ via Go channels.
-It sends an envelope via $Enqueue$ method of $BlockProcessor$ and receives back a Go channel where the block header will be sent to once the envelope is committed to the ledger.
+The Endorser communicates with a \textbf{BlockProcessor} via Go channels.
+It sends an envelope via \textbf{Enqueue} method of \textbf{BlockProcessor} and receives back a Go channel where the block header will be sent to once the envelope is committed to the ledger.
 
 \section{BlockProcessorSupport interface}
 \label{sec:bp-interface}
 
-Block processors implement $BlockProcessorSupport$ interface.
+Block processors implement \textbf{BlockProcessorSupport} interface.
 
 \begin{lstlisting}
 type BlockProcessorSupport interface {
@@ -174,14 +174,13 @@ The second iteration of block processors mostly mimics the implementation of the
 
 Envelopes are collected and committed in batches. Once a set amount of transaction envelopes is collected or a set timeout has elapsed, the current batch is packed into a block and committed to the ledger.
 
-Once the block is committed, all client handlers get notified about the block via channels returned by the $Enqueue$ method. See \ref{sec:bp-interface}.
+Once the block is committed, all client handlers get notified about the block via channels returned by the \textbf{Enqueue} method. See \ref{sec:bp-interface}.
 
 While this improvement greatly increased the throughput already, an additional improvement was implemented.
 
 Previously, the main thread of a block processor waited until the current block is committed before starting collecting envelopes for the next one. In the final implementation, once a block is created, the main thread immediately starts collecting the batch for the next block, while the previous one is being committed.
 
-\section{Final implementation}
-
+\section{Final implementation}\label{sec:bp-fin}
 We introduce two new parameters to the peer, passed via environment variables.
 
 \begin{itemize}
@@ -192,7 +191,7 @@ We introduce two new parameters to the peer, passed via environment variables.
 Default values are 10 and 0.25s respectively.
 
 The implementation is in the endorser package and specifically in the
-$core/endorser/block\_processor.go$ file.
+\textbf{core/endorser/block\_processor.go} file.
 
 \newpage
 The structure implementing the BlockProcessor interface is as follows:
@@ -247,37 +246,37 @@ type blockReq struct {
 
 \subsection*{Enqueue}
 
-Enqueue method creates a new response channel and a $blockReq$ structure. The request structure is then sent to $sendChan$ channel and the response channel returned to the caller.
+Enqueue method creates a new response channel and a \textbf{blockReq} structure. The request structure is then sent to \textbf{sendChan} channel and the response channel returned to the caller.
 
 \subsection*{The main loop}
 
-The main loop listens to the $sendChan$ channel.
+The main loop listens to the \textbf{sendChan} channel.
 
-When the processor receives a $blockReq$ via $sendChan$ it appends the request to the current batch. Afterward, if the batch size is collected the thread calls $commitBatch$ method and the timer is set to $nil$. If the batch is not yet completed, the thread sets the timer to $batchTimeout$.
+When the processor receives a \textbf{blockReq} via \textbf{sendChan} it appends the request to the current batch. Afterward, if the batch size is collected the thread calls \textbf{commitBatch} method and the timer is set to \textbf{nil}. If the batch is not yet completed, the thread sets the timer to \textbf{batchTimeout}.
 
 When a timer has run out the current batch is committed
 
 \subsection*{Block committer}
 
-The block committer runs in a goroutine separate from the main loop. It receives blocks from two channels: $blockChan$ and $extraBlockChan$.
+The block committer runs in a goroutine separate from the main loop. It receives blocks from two channels: \textbf{blockChan} and \textbf{extraBlockChan}.
 
-When the committer receives a block from $extraBlockChan$ channel, it changes the blocks header so it is consistent with the local chain, commits the block and updates the $lastBlock$ reference once it gets the mutex.
+When the committer receives a block from \textbf{extraBlockChan} channel, it changes the blocks header so it is consistent with the local chain, commits the block and updates the \textbf{lastBlock} reference once it gets the mutex.
 
-When the committer receives a block from the $blockChan$ channel it is simply committed. The reference update is already handled in $commitBatch$ function
+When the committer receives a block from the \textbf{blockChan} channel it is simply committed. The reference update is already handled in \textbf{commitBatch} function
 
-The blocks are committed by calling the $StoreRawBlock$ method of the $GossipService$ interface.
+The blocks are committed by calling the \textbf{StoreRawBlock} method of the \textbf{GossipService} interface.
 
 \subsection*{commitBatch}
 
-The commitBatch function creates a block with the current batch and updates the $lastBlock$ reference. This part is guarded by the mutex, so that the block committer and the $commitBatch$ function do not interfere.
+The commitBatch function creates a block with the current batch and updates the \textbf{lastBlock} reference. This part is guarded by the mutex, so that the block committer and the \textbf{commitBatch} function do not interfere.
 
-The block is then sent to the committer via $blockChan$ and the resulting block header is broadcastedto all return channels from the batch.
+The block is then sent to the committer via \textbf{blockChan} and the resulting block header is broadcastedto all return channels from the batch.
 
 The block is sent to a channel in a separate goroutine so that the main thread can continue and start collecting the next batch while the separate goroutine waits for the committer to receive the block.
 
 \subsection*{AttachBlock}
 
-This method simply sends the block to the $extraBlockChan$ channel.
+This method simply sends the block to the \textbf{extraBlockChan} channel.
 
 \section{The Gossip service}
 
@@ -291,12 +290,12 @@ The second one is used to forward all incoming blocks from the orderer to the ma
 
 It is important to create both channels only once and pass them to the Gossip service since some components of the service are reinitialized. In particular, each peer starts as a leader peer in the network and finds out later whether it is the leader or not. Non-leader peers reinitialize the gossip component for their new role. If the channels in question were created from withing the Gossip initialization and their references were later passed to other components, they would become invalid during the reinitialization of non-leaders gossip components.
 
-Both channels are created in $serve$ function from the $node$ package, located in $peer/node/start.go$.
+Both channels are created in \textbf{serve} function from the \textbf{node} package, located in \textbf{peer/node/start.go}.
 
 Two goroutines are created to handle the channels.
 
-One listens to the "Join channel" messages and calls $AddBlockProcessor$ method of the Endorser server
+One listens to the "Join channel" messages and calls \textbf{AddBlockProcessor} method of the Endorser server
 
-The other receives blocks from the Gossip service and redirects them to the $AttachBlock$ method of the Endorser. This method is not the same as the $AttachBlock$ method of the $BlockProcessor$ interface.
+The other receives blocks from the Gossip service and redirects them to the \textbf{AttachBlock} method of the Endorser. This method is not the same as the \textbf{AttachBlock} method of the \textbf{BlockProcessor} interface.
 
 Another important change is that the Gossip service implementation no longer commits the blocks itself. All blocks are committed by the respective Block Processor. The Gossip service merely sends all blocks from the Orderer via the Go channel to the main thread of the peer.
