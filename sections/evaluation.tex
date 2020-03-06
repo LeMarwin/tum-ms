@@ -1,4 +1,96 @@
 \chapter{Evaluation}
 \label{chapter:evaluation}
 
-The evaluation chapter.
+\section{Benchmark infrastructure}\label{sec:infra}
+
+We use Caliper as a benchmark tool and HyperLedgerLab to set up the benchmark infrastructure and perform test runs. Modifications to these systems are described in \ref{sec:caliper} and \ref{sec:hll}.
+
+The benchmark runs on an OpenStack cluster and consists of eight instances: three control nodes, three worker nodes, one load-balancer/DNS node, and one node for CLI. The CLI node is not used in the benchmark runs but is employed to set up the infrastructure and orchestrate the runs. Control and worker nodes are of the size m1.large. The rest is m1.medium.
+
+{\color{red}Here will be \\technical details\\of m1.large \\and m1.medium \\once the cluster\\ is back online}
+
+\newpage
+
+\section{Benchmark chaincode}\label{sec:benchcode}
+
+We use a simple chaincode with one core transaction to test the new Fabric. The ledger is initialized with one key: "VAR0" and a value 1. The transaction \textbf{moveVar} takes a new key as input, reads the value at "VAR0" and writes it to the new key. By itself,  \textbf{moveVar} is not conflict-free. This property is provided by the benchmark. For each transaction invocation, it picks a random key and invokes \textbf{moveVar} with that key as an argument. This, of course, does not guarantee the conflict-free property but makes transactions practically conflict-free.
+
+\section{Testing plan}\label{sec:testplan}
+
+First, we would like to see how changes in new parameters: batch size and batch timeout affect the throughput. Second, we would like to see if and how the number of peers and the number of organizations influence the throughput. In addition, we expect all or virtually all transactions to be committed. The testing plan is as follows:
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{ c|c|c|c }
+  \# Orgs & peers per org & batch size & batch timeout \\
+ \hline
+ \hline
+ 2 & 2 & 30 & 0.3 \\
+ \hline
+ 2 & 2 & 50 & 0.2 \\
+ \hline
+ 2 & 2 & 10 & 0.2 \\
+ \hline
+ 2 & 3 & 50 & 0.2 \\
+ \hline
+ 2 & 4 & 50 & 0.2 \\
+ \hline
+ 3 & 1 & 50 & 0.2 \\
+ \hline
+ 1 & 4 & 50 & 0.2 \\
+ \hline
+ 1 & 3 & 50 & 0.2 \\
+ \hline
+ 1 & 1 & 50 & 0.2 \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{Benchmark networks}
+\label{table:setups}
+\end{table}
+
+Each setup is tested under 100, 200 and 300 TPS with 10000 transactions each. Afterward, a single query transaction is submitted to check if peers respond with consistent results.
+
+\section{Results}\label{sec:testres}
+
+Raw numbers are presented in the Appendix \ref{apdx:1}. Here we present only the maximal throughput for each scenario and would like to discuss the results in general and what conclusions one can make from them.
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{ c|c|c|c|c|c }
+  \# Orgs & peers per org & batch size & batch timeout & throughput & avg latency, s \\
+ \hline
+ \hline
+ 2 & 2 & 30 & 0.3 & 242.5 & 11.02\\
+ \hline
+ 2 & 2 & 50 & 0.2 & 252.4 & 7.97 \\
+ \hline
+ 2 & 2 & 10 & 0.2 & 252.5 & 9.62 \\
+ \hline
+ 2 & 3 & 50 & 0.2 & 213.8 & 16.94 \\
+ \hline
+ 2 & 4 & 50 & 0.2 & 180.7 & 27.35 \\
+ \hline
+ 3 & 1 & 50 & 0.2 & 247.7 & 10.52 \\
+ \hline
+ 1 & 4 & 50 & 0.2 & 256.8 & 8.89 \\
+ \hline
+ 1 & 3 & 50 & 0.2 & 280.3 & 3.52 \\
+ \hline
+ 1 & 1 & 50 & 0.2 & 297.7 & 0.59 \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{Benchmark results}
+\label{table:results}
+\end{table}
+
+It turns out that under high load the batch size or the batch timeout changes show almost no effect on the throughput. The reason for that lies in the specifics of block processors implementation. Once enough transactions are collected, the block is issued and all clients receive a response, while the block is enqueued to be committed. The benchmark marks a transaction as committed when it receives a receipt, not when the actual block is committed. This approach might pose a problem in an industrial setting but is sufficient for a proof of concept.
+
+Moreover, the number of organizations does not appear to affect throughput. The setup with 2 organizations with 2 peers in each organization, 4 in total, showed essentially the same throughput as the setup with 1 organization with 4 peers in it. This is to be expected since clients have to send the transaction envelope to all peers instead of sending it to one orderer and waiting for block events. It seems that the removal of the bottleneck of the ordering service might increase the throughput but severely hinder the scalability of the system.
+
+However, the scalability issue might be ameliorated by employing anchor peers. Basically, make anchor peer of an organization keep a local ledger, and distribute the blocks of that ledger among the peers of its organization.
+
+This approach has its own downsides. For example, it makes impossible endorsement policies that require endorsements from multiple peers of an organization.
+
+Tests have not included the same variability of batch timeouts as with batch size since when testing under high load it becomes virtually irrelevant. When a peer receives more transactions per second than is enough to make a couple of batches, the batch size becomes the limiting factor of the throughput. However it seems to affect the average latency as does the block size.
