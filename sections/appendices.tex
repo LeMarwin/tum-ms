@@ -2,8 +2,186 @@
 \addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
 \chapter{Appendix}
 
-\section{First}
+\section{Results} \label{apdx:1}
 
-First Appendix
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c| }
+ \hline
+  Test & Name & Succ  & Fail & Send TPS & Max lat, s & Min lat, s & Avg lat, s & Throughput \\
+ \hline
+ \hline
+ 1    & moveVar & 10000 & 0    & 99.1  & 1.10      & 0.02      & 0.22      & 98.8 \\
+ \hline
+ 2    & moveVar & 10000 & 0    & 199.6 & 1.10      & 0.06      & 0.43      & 197.5 \\
+ \hline
+ 3    & moveVar & 10000 & 0    & 263.0 & 34.44     & 0.21      & 11.02     & 242.5 \\
+ \hline
+ 4    & getSum  & 4     & 0    & 58.0  & 21.02     & 20.94     & 20.98     & 0.2 \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{2 Orgs, 2 peers per org, 30 batch size, 0.3s batch timeout}
+\end{table}
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c| }
+ \hline
+  Test & Name & Succ  & Fail & Send TPS & Max lat, s & Min lat, s & Avg lat, s & Throughput \\
+ \hline
+ \hline
+ 1    & moveVar & 10000 & 0    & 99.3  & 1.39      & 0.03      & 0.37      & 99.1   \\
+ \hline
+ 2    & moveVar & 10000 & 0    & 199.3 & 1.66      & 0.05      & 0.67      & 197.4  \\
+ \hline
+ 3    & moveVar & 10000 & 0    & 273.7 & 26.14     & 0.38      & 7.97      & 252.4  \\
+ \hline
+ 4    & getSum  & 4     & 0    & 108.1 & 21.25     & 21.00     & 21.13     & 0.2    \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{2 Orgs, 2 peers per org, 50 batch size, 0.2s batch timeout}
+\end{table}
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c| }
+ \hline
+  Test & Name & Succ  & Fail & Send TPS & Max lat, s & Min lat, s & Avg lat, s & Throughput \\
+ \hline
+ \hline
+ 1    & moveVar & 10000 & 0    & 99.8  & 0.70      & 0.02      & 0.16      & 99.7 \\
+ \hline
+ 2    & moveVar & 10000 & 0    & 199.6 & 1.16      & 0.03      & 0.31      & 199.0 \\
+ \hline
+ 3    & moveVar & 10000 & 0    & 294.1 & 33.05     & 0.07      & 9.62      & 252.5 \\
+ \hline
+ 4    & getSum  & 4     & 0    & 53.3  & 9.11      & 9.03      & 9.05      & 0.4 \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{2 Orgs, 2 peers per org, 10 batch size, 0.2s batch timeout}
+\end{table}
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c| }
+ \hline
+  Test & Name & Succ  & Fail & Send TPS & Max lat, s & Min lat, s & Avg lat, s & Throughput \\
+ \hline
+ \hline
+ 1    & moveVar & 10000 & 0    & 99.6  & 1.25       & 0.03       & 0.36       & 99.3  \\
+ \hline
+ 2    & moveVar & 10000 & 0    & 199.5 & 1.67       & 0.12       & 0.64       & 197.9 \\
+ \hline
+ 3    & moveVar & 9996  & 4    & 249.4 & 41.48      & 0.49       & 16.94      & 213.8 \\
+ \hline
+ 4    & getSum  & 4     & 0    & 20.9  & 27.25      & 18.27      & 24.88      & 0.1   \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{2 Orgs, 3 peers per org, 50 batch size, 0.2s batch timeout}
+\end{table}
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c| }
+ \hline
+  Test & Name & Succ  & Fail & Send TPS & Max lat, s & Min lat, s & Avg lat, s & Throughput \\
+ \hline
+ \hline
+ 1    & moveVar & 10000 & 0    & 99.2  & 1.66      & 0.07      & 0.66      & 98.7  \\
+ \hline
+ 2    & moveVar & 10000 & 0    & 199.2 & 3.60      & 0.18      & 1.14      & 196.0 \\
+ \hline
+ 3    & moveVar & 9927  & 73   & 260.9 & 52.37     & 0.49      & 27.35     & 180.7 \\
+ \hline
+ 4    & getSum  & 0     & 4    & 25.2  & 0.00      & 100000.00 & NaN       & 0.0   \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{2 Orgs, 4 peers per org, 50 batch size, 0.2s batch timeout}
+\end{table}
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c| }
+ \hline
+  Test & Name & Succ  & Fail & Send TPS & Max lat, s & Min lat, s & Avg lat, s & Throughput \\
+ \hline
+ \hline
+ 1    & moveVar & 10000 & 0    & 98.8  & 1.29      & 0.02      & 0.31      & 98.6  \\
+ \hline
+ 2    & moveVar & 10000 & 0    & 199.3 & 1.00      & 0.06      & 0.38      & 198.7 \\
+ \hline
+ 3    & moveVar & 10000 & 0    & 285.8 & 32.79     & 0.37      & 10.52     & 247.7 \\
+ \hline
+ 4    & getSum  & 4     & 0    & 56.3  & 10.55     & 10.48     & 10.52     & 0.4   \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{3 Orgs, 1 peer per org, 50 batch size, 0.2s batch timeout}
+\end{table}
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c| }
+ \hline
+  Test & Name & Succ  & Fail & Send TPS & Max lat, s & Min lat, s & Avg lat, s & Throughput \\
+ \hline
+ \hline
+ 1    & moveVar & 10000 & 0    & 99.4  & 1.20      & 0.03      & 0.30      & 99.4 \\
+ \hline
+ 2    & moveVar & 10000 & 0    & 199.7 & 0.95      & 0.02      & 0.33      & 199.2 \\
+ \hline
+ 3    & moveVar & 10000 & 0    & 286.0 & 28.11     & 0.09      & 8.89      & 256.8 \\
+ \hline
+ 4    & getSum  & 4     & 0    & 26.1  & 23.18     & 7.31      & 19.15     & 0.2 \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{1 Org, 4 peers per org, 50 batch size, 0.2s batch timeout}
+\end{table}
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c| }
+ \hline
+  Test & Name & Succ  & Fail & Send TPS & Max lat, s & Min lat, s & Avg lat, s & Throughput \\
+ \hline
+ \hline
+ 1    & moveVar & 10000 & 0    & 99.4  & 1.14      & 0.02      & 0.30      & 99.4  \\
+ \hline
+ 2    & moveVar & 10000 & 0    & 199.7 & 0.62      & 0.02      & 0.21      & 199.5 \\
+ \hline
+ 3    & moveVar & 10000 & 0    & 296.6 & 13.69     & 0.07      & 3.52      & 280.3 \\
+ \hline
+ 4    & getSum  & 4     & 0    & 81.6  & 10.25     & 9.86      & 10.13     & 0.4   \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{1 Org, 3 peers per org, 50 batch size, 0.2s batch timeout}
+\end{table}
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c|c|c|c| }
+ \hline
+  Test & Name & Succ  & Fail & Send TPS & Max lat, s & Min lat, s & Avg lat, s & Throughput \\
+ \hline
+ \hline
+ 1 & moveVar  & 10000  & 0 & 99.6 & 0.86 s & 0.02 s & 0.30 s & 99.5  \\
+  \hline
+ 2 & moveVar  & 10000  & 0 & 199.7  & 0.68 s & 0.03 s & 0.29 s & 199.3 \\
+  \hline
+ 3 & moveVar  & 10000  & 0 & 298.8  & 1.61 s & 0.10 s & 0.59 s & 297.7 \\
+  \hline
+ 4 & getSum  & 4  & 0  & 190.5  & 10.55 s  & 10.52 s  & 10.53 s  & 0.4 \\
+ \hline
+\end{tabular}
+\end{center}
+\caption{1 Org, 1 peers per org, 50 batch size, 0.2s batch timeout}
+\end{table}
 
 \end{appendices}
