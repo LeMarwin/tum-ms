@@ -1,4 +1,8 @@
 \chapter{Related Work}
 \label{chapter:relatedWork}
 
-Related work materials 
+There is hardly any work directly related to the approach chosen by this project. Most of the optimizations of the ordering phase focus on improving the ordering service. There is no direct attempt at the removal of the ordering service as far as I was able to find out.
+
+As mentioned in \ref{sec:app-noorder} one possible approach is to implement a peer-based PBFT consensus. Indeed there is a PBFT consensus in plans for Hyperledger Fabric, however, Fabric team's idea is to keep the ordering service logically and physically separate from peers. There will be a network of orderers that will receive endorsed transactions and decide on the ordering via a PBFT protocol. Resulting blocks will then be sent to the peers who have no say in the ordering decisions. At the moment Hyperledger Fabric is not Byzantine-fault tolerant and the new Raft ordering service is merely groundwork for a fully BFT ordering service as mentioned in \cite{fabricdocs:orderer}.
+
+Another somewhat related work is \cite{lit:fabriccrdt} while it does not discuss the removal of the ordering service, it explores the application of CRDTs in Fabric. The idea is to use CRDTs to eliminate transaction conflict thus increasing the throughput of the network. However, transactions in \cite{lit:fabriccrdt} still go through the ordering service. This thesis is in a way a follow-up work. We use CRDTs to have non-conflicting order-less transactions and try to eliminate the ordering service as the next optimization.

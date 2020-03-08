@@ -1,16 +1,16 @@
 \chapter{Introduction}
 \label{chapter:introduction}
 
-{\color{red}Some basic introduction. \\Fill in later\\Ideally \\at least \\this number\\ of lines}
+Since the creation and popularization of Bitcoin, numerous other blockchains were created. While some follow Bitcoin in its core ideas and implement the same type of consensus, namely Proof-of-work consensus, other blockchains employ different ways to reach consensus regarding the order of transactions. Bitcoin's choice of PoW is dictated by the permissionless nature of its network. PoW remains the sole practical way of reaching consensus in an open anonymous network where peers have zero trust towards each other. While providing means of reaching consensus Proof-of-work protocols have a low throughput measured in committed transactions per second. While this is not a problem in some scenarios, there are situations where high throughput is needed. If in these situations peers of the network have some degree of trust towards each other, an alternative solution can be used. Premissioned blockchains provide such a solution.
+
+Hyperledger Fabric is an example of a permissioned blockchain. It provides a framework for creating high-throughput blockchains. However, there is always room for improvement. This thesis focuses on improving Hyperledger Fabric by optimizing its bottleneck, the ordering service under specific conditions.
 
 \section{Motivation}
 \label{sec:motivation}
 
 Hyperledger Fabric employs a complicated network architecture. It's key part is the ordering service. Every transaction must eventually be sent to the orderer to be included in a block. Moreover, to avoid forks there can be only one ordering service in Fabric's network.
 
-Also, since Fabric's transaction lifecycle separates the endorsement phase from the ordering or "adding to a block" phase and because of the extra network delays caused by this extra step, a lot of transactions become invalid by the time they reach the commit phase.
-
-These factors make the ordering service a natural bottleneck and a prime target for optimization.
+Also, since Fabric's transaction lifecycle separates the endorsement phase from the ordering or "adding to a block" phase and because of the extra network delays caused by this extra step, a lot of transactions become invalid by the time they reach the commit phase. These factors make the ordering service a natural bottleneck and a prime target for optimization.
 
 \section{Problem Statement}
 \label{sec:problemStatement}
@@ -42,20 +42,15 @@ The goal of the project is to create a premissioned blockchain based on Hyperled
  The new transaction lifecycle is as follows.
  The client sends transaction proposals to all endorsing peers as usual and collects endorsments. The endorsed transaction is then sent to all peers in the network. A peer receives the endorsed transaction, checks the signatures according to chain's policy and commits the transaction. After the transaction is committed, the peer send the client a receipt with the hash of the block the transaction was commited to. The client consideres the transaction as committed once it receives receipts from all peers.
 
-\section{Organization}
- \label{sec:organization}
- Chapter \ref{chapter:background} describes Hyperledger Fabric's network architecture and provides information about internal workings of the system.
+\section{Organization} \label{sec:organization}
+ The rest of the thesis is organized as follows. Chapter \ref{chapter:background} describes Hyperledger Fabric's network architecture and provides information about internal workings of the system. Chapter \ref{chapter:relatedWork} mentiones related work and precursors for this project.
 
- Chapter \ref{chapter:relatedWork} mentiones related work and precursors for this project.
+ Chapters \ref{chapter:fabric} and \ref{chapter:sdks} detail the work done in this project. Chapter \ref{chapter:fabric} focuses on changes of Fabrics core systems and explains the new subsystem added by this project.
+ Chapter \ref{chapter:sdks} describes changes in Hyperledger Fabrics SDKs and tools which enable users to access new features added to the Fabric.
+ % \setlength{\parindent}{1em}
+ % \indent Section \label{sec:app-approach} outlines the general implementation approach. Section  explains design decisions, problems and solutions of the initial implementation of the system.
+ %
+ % \indent Section  discusses subsequent improvements on the initial design.
+ % \setlength{\parindent}{0pt}
 
- Chapter \ref{chapter:fabric} details the work done in this project.
-
- \setlength{\parindent}{1em}
- \indent Section  explains design decisions, problems and solutions of the initial implementation of the system.
-
- \indent Section  discusses subsequent improvements on the initial design.
- \setlength{\parindent}{0pt}
-
- Chapter \ref{chapter:evaluation} describes the benchmark setup, benchmark chaincode and provides results of the testing.
-
- Chapter \ref{chapter:summary} discusses results of the project and outlines possible follow-up works.
+ Chapter \ref{chapter:evaluation} describes the benchmark setup, benchmark chaincode and provides results of the testing. Chapter \ref{chapter:summary} discusses results of the project and outlines possible follow-up works.
