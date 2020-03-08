@@ -1,18 +1,17 @@
 \chapter{Summary} \label{chapter:summary}
 
-Summary
-
-\section{Status} 
+\section{Status}
 \label{sec:status}
 
-Final Status of the Thesis
+All in all, I consider the project a success. The declared goal is achieved, the ordering service is successfully removed from the transaction's lifecycle. The resulting system works as intended with all transactions being committed without conflicts directly to peers, bypassing the ordering service. Evaluation of the resulting system showed that it provides decent throughput in benchmark scenarios.
 
-\section{Conclusions}
+\section{Conclusions and future work}
 \label{sec:conclusions}
 
-Concluding remarks of Thesis
+The project showed that it is indeed possible to successfully remove the ordering service from Hyperledger Fabric despite it being a key part of the system. However, I consider the implementation to be an ad-hoc hack and more of a proof of concept rather than an industrial-grade solution.
 
-\section{Future Work} 
-\label{sec:futureWork}
+The project also exposed the limitations of an orderless Fabric and introduced new problems to solve. As chapter \ref{chapter:evaluation} showed, the orderless network has a high throughput and relatively low latency in scenarios with just a couple of peers. However, when the number of peers in the network increases, the throughput decreases and the average latency increases dramatically.  This might be fine for toy problems and testing scenarios but makes the system unusable for large-scale problems.
 
-Future Work
+While working on this project I've come up with possible solutions to the scaling problem. However, it was not feasible to implement everything in the scope of this work. As mentioned in section \ref{sec:testres} it might be possible to use the Gossip system to distribute blocks with orderless transactions among the peers of an organization. This approach will allow clients to send an endorsed transaction only to the anchor peer of organizations and not care about the rest of the peers. This will reduce the number of network calls the client has to make in order to commit a transaction.
+
+Another improvement would be to use the system of events used by the original Fabric. This way the client doesn't have to syncronously wait for the response from the \textbf{SendEnvelope} handler to confirm that a transaction was committed. These solutions can be further explored in future works.
