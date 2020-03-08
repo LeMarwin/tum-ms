@@ -7,7 +7,22 @@ We use Caliper as a benchmark tool and HyperLedgerLab to set up the benchmark in
 
 The benchmark runs on an OpenStack cluster and consists of eight instances: three control nodes, three worker nodes, one load-balancer/DNS node, and one node for CLI. The CLI node is not used in the benchmark runs but is employed to set up the infrastructure and orchestrate the runs. Control and worker nodes are of the size m1.large. The rest is m1.medium.
 
-{\color{red}Here will be \\technical details\\of m1.large \\and m1.medium \\once the cluster\\ is back online}
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{ |c|c|c|c| }
+  \hline
+  Name & VCPUS & RAM & Disk space \\
+  \hline
+  \hline
+  m1.medium & 2 & 4.88 GB & 10 GB \\
+  \hline
+  m1.large  & 4 & 9.77 GB & 20 GB \\
+  \hline
+\end{tabular}
+\end{center}
+\caption{OpenStack instance flavors}
+\label{table:flavors}
+\end{table}
 
 \newpage
 
