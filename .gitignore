@@ -3,3 +3,4 @@ thesis*
 sections/*
 !sections/*.tex
 figures/src/.*
+results/*.pem
