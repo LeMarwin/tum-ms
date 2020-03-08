@@ -1,6 +1,13 @@
 \chapter{Background}
 \label{chapter:background}
 
+This thesis is focused on Hyperledger Fabric. It is a permissioned blockchain project aimed at creating a framework for blockchain solutions. The network and the consensus protocol are the hardest parts of the blockchain to implement and Hyperledger Fabric provides the plug-and-play solution to this problem. The programmer only needs to implement the transaction logic he or she wants and upload it as a chaincode to get a functioning blockchain.
+
+In this chapter, I will illustrate relevant parts of the Hyperledger Fabric, explain concepts necessary for understanding the thesis, and focus on parts of the framework I intend to modify.
+
+Hyperledger Fabric itself is written in Go programming language. There is also an SDK for developing client applications written in NodeJS.
+However, knowledge or proficiency with Go or NodeJS is not required for understanding the thesis.
+
 \section{Network}
 \label{sec:network}
 
@@ -18,8 +25,6 @@ For simplicity, the network has only one channel and two organizations.
 \label{fig:net}
 \end{figure}
 
-% \bildgross{figures/network}{}{Example of a Fabric network}{fig:net}
-
 The network consists of two organizations $R1$ and $R2$. The network is under control of both R1 and R2 and is governed according to policy rules specified in the network configuration $NC$.
 
 The network has four peers. Peers $P1$ and $P2$ belong to organization $R1$ and peers $P3$ and $P4$ belong to $R2$.
@@ -36,7 +41,7 @@ Applications are connected to the channel and can use its ledger and smart contr
 
 Certificate authority issues and confirms certificates that are used to establish which applications or parts of the network belong to which organization. In this case, $CA$ is used by both organizations but in a general case, each organization can host its certificate authority server.
 
-\newpage
+% \newpage
 
 \section{Transaction flow}
 \label{sec:flow}
