@@ -1,31 +1,42 @@
 \chapter{Background}
 \label{chapter:background}
 
-This thesis is focused on Hyperledger Fabric. It is a permissioned blockchain project aimed at creating a framework for blockchain solutions. The network and the consensus protocol are the hardest parts of the blockchain to implement and Hyperledger Fabric provides the plug-and-play solution to this problem. The programmer only needs to implement the transaction logic he or she wants and upload it as a chaincode to get a functioning blockchain.
+This thesis is focused on Hyperledger Fabric. It is a permissioned blockchain project aimed at creating a framework for blockchain solutions\cite{lit:HF:ADOSPB}. The network and the consensus protocol are the hardest parts of the blockchain to implement and Hyperledger Fabric provides the plug-and-play solution to this problem. The programmer only needs to implement the transaction logic he or she wants and upload it as a chaincode to get a functioning blockchain.
 
 In this chapter, we will illustrate relevant parts of the Hyperledger Fabric, explain concepts necessary for understanding the thesis, and focus on parts of the framework we intend to modify.
 
 Hyperledger Fabric itself is written in Go programming language. There is also an SDK for developing client applications written in NodeJS.
 However, knowledge or proficiency with Go or NodeJS is not required for understanding the thesis.
 
-\section{Network}
+\section{The toolchain}\label{sec:back-tools}
+
+Firstly, we should briefly describe the toolchain provided by the Hyperledger Fabric project for developing Fabric-based client applications and the framework used to benchmark the system.
+
+Hyperledger Fabric is the core of the system. It implements the Fabric's network components: Peers, Orderers, etc.  This is the part where most of the changes to the original Fabric will be implemented.
+
+Alongside Fabric's core, the project provides the developer with an SDK for building client applications. The SDK is implemented in several different languages: Go, Node.js, Python, and Java. In this project, we use and modify the Node.js implementation \cite{lit:fabric-sdk-node}. The SDK provides the developer tools to connect to the network, invoke transactions, run queries, interact with peers, etc.
+
+Another important part of the toolchain is Fabric's shim. It is also implemented in several languages. For this project, we chose the Go implementation of the shim \cite{lit:fabric-shim-go}. The shim is used to write chaincode and access world state's kv-ledger functionality: get and put a value, query a range of keys etc. The shim is not modified in this project.
+
+And finally, the benchmarking tools. To write and run benchmarks we use a modified version of Hyperledger Caliper \cite{lit:caliper} and we use HyperLedgerLab \cite{lit:hyperledgerlab} to set up the infrastructure and orchestrate the benchmarking process.
+
+\section{The Network}
 \label{sec:network}
 
 In this section, we will dissect a basic network architecture. This example is based on the network used in chapter \ref{chapter:evaluation}. The section is based on \cite{fabricdocs:network}
 
 For simplicity, the network has only one channel and two organizations.
 
-\vskip 0.5cm
+The network consists of two organizations $R1$ and $R2$. The network is under control of both R1 and R2 and is governed according to policy rules specified in the network configuration $NC$.
 
-\begin{figure}[hp]
+\begin{figure}
 \begin{center}
 \includegraphics[width=0.95\textwidth]{figures/network}
 \end{center}
 \caption{Example of a Fabric network}
 \label{fig:net}
 \end{figure}
-
-The network consists of two organizations $R1$ and $R2$. The network is under control of both R1 and R2 and is governed according to policy rules specified in the network configuration $NC$.
+\vspace{0.25cm}
 
 The network has four peers. Peers $P1$ and $P2$ belong to organization $R1$ and peers $P3$ and $P4$ belong to $R2$.
 
@@ -41,7 +52,7 @@ Applications are connected to the channel and can use its ledger and smart contr
 
 Certificate authority issues and confirms certificates that are used to establish which applications or parts of the network belong to which organization. In this case, $CA$ is used by both organizations but in a general case, each organization can host its certificate authority server.
 
-% \newpage
+\newpage
 
 \section{Transaction flow}
 \label{sec:flow}
@@ -67,14 +78,6 @@ This segment describes some internal parts of a peer that are necessary for unde
 
 A peer implements a number of services and consists of many subsystems. Endorser, Gossip, and KV-ledger subsystems are the relevant ones for the work.
 
-\begin{figure}[hp]
-\begin{center}
-\includegraphics[width=0.5\textwidth]{figures/peer}
-\end{center}
-\caption{Relevant parts of a peer}
-\label{fig:peer}
-\end{figure}
-
 Endorser subsystem is the one exposed to clients on the peer's side and it implements the Endorser gRPC service with a single call named ProcessProposal.
 \begin{lstlisting}
 rpc ProcessProposal(SignedProposal) returns (ProposalResponse) {}
@@ -88,3 +91,12 @@ The Gossip subsystem handles all communications between all nodes of the network
 KV-ledger subsystem implements PeerLedger interface and handles all the steps of committing a block to the ledger, described in \ref{sec:flow}. It is at this stage when each transaction goes through MVCC validation when versions of keys from read set are compared with versions from the ledger for consistency
 
 It is important to note, that the Gossip service is a singleton and it is possible to access it globally from any part of the peer. However, the Endorser does not access it in its code. On the contrary, there is an instance of KV-ledger subsystem for each ledger hosted on the peer and it's not accessible to write to from the Endorser.
+
+\vspace{0.5cm}
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.75\textwidth]{figures/peer}
+\end{center}
+\caption{Relevant parts of a peer}
+\label{fig:peer}
+\end{figure}

@@ -1,9 +1,9 @@
 \chapter{Introduction}
 \label{chapter:introduction}
 
-Since the creation and popularization of Bitcoin, numerous other blockchains were created. While some follow Bitcoin in its core ideas and implement the same type of consensus, namely Proof-of-work consensus, other blockchains employ different ways to reach consensus regarding the order of transactions. Bitcoin's choice of PoW is dictated by the permissionless nature of its network. PoW remains the sole practical way of reaching consensus in an open anonymous network where peers have zero trust towards each other. While providing means of reaching consensus Proof-of-work protocols have a low throughput measured in committed transactions per second. While this is not a problem in some scenarios, there are situations where high throughput is needed. If in these situations peers of the network have some degree of trust towards each other, an alternative solution can be used. Premissioned blockchains provide such a solution.
+Since the creation of Bitcoin in 2008 \cite{lit:nakamoto} and its subsequent popularization, numerous other blockchains were created\cite{lit:litecoin, lit:dogecoin}. While some follow Bitcoin in its core ideas and implement the same type of consensus, namely Proof-of-work consensus, other blockchains employ different ways to reach consensus regarding the order of transactions \cite{lit:eth, lit:ethereum}. Bitcoin's choice of PoW is dictated by the permissionless nature of its network. PoW remains the sole practical way of reaching consensus in an open anonymous network where peers have zero trust towards each other. While providing means of reaching consensus Proof-of-work protocols have a low throughput measured in committed transactions per second. While this is not a problem in some scenarios, there are situations where high throughput is needed. If in these situations peers of the network have some degree of trust towards each other, an alternative solution can be used. Premissioned blockchains provide such a solution.
 
-Hyperledger Fabric is an example of a permissioned blockchain. It provides a framework for creating high-throughput blockchains. However, there is always room for improvement. This thesis focuses on improving Hyperledger Fabric by optimizing its bottleneck, the ordering service under specific conditions.
+Hyperledger Fabric is an example of a permissioned blockchain\cite{lit:HF:ADOSPB}. It provides a framework for creating high-throughput blockchains. However, there is always room for improvement. This thesis focuses on improving Hyperledger Fabric by optimizing its bottleneck, the ordering service under specific conditions.
 
 \section{Motivation}
 \label{sec:motivation}
@@ -32,7 +32,7 @@ The goal of the project is to create a premissioned blockchain based on Hyperled
 
 \begin{itemize}
   \item Assume only conflict-free transactions.
-  \item The world state is represented by a conflict-free replicated data type (CRDT).
+  \item The world state is represented by a conflict-free replicated data type (CRDT) \cite{lit:merging-crdt}.
   \item Keep the ordering service for configuration transactions and chaincode initialization.
   \item Keep the blockchain, pack transactions into blocks.
 \end{itemize}
@@ -47,10 +47,5 @@ The goal of the project is to create a premissioned blockchain based on Hyperled
 
  Chapters \ref{chapter:fabric} and \ref{chapter:sdks} detail the work done in this project. Chapter \ref{chapter:fabric} focuses on changes of Fabrics core systems and explains the new subsystem added by this project.
  Chapter \ref{chapter:sdks} describes changes in Hyperledger Fabrics SDKs and tools which enable users to access new features added to the Fabric.
- % \setlength{\parindent}{1em}
- % \indent Section \label{sec:app-approach} outlines the general implementation approach. Section  explains design decisions, problems and solutions of the initial implementation of the system.
- %
- % \indent Section  discusses subsequent improvements on the initial design.
- % \setlength{\parindent}{0pt}
 
  Chapter \ref{chapter:evaluation} describes the benchmark setup, benchmark chaincode and provides results of the testing. Chapter \ref{chapter:summary} discusses results of the project and outlines possible follow-up works.
