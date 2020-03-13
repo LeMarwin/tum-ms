@@ -12,11 +12,11 @@ However, knowledge or proficiency with Go or NodeJS is not required for understa
 
 Firstly, we should briefly describe the toolchain provided by the Hyperledger Fabric project for developing Fabric-based client applications and the framework used to benchmark the system.
 
-Hyperledger Fabric is the core of the system. It implements the Fabric's network components: Peers, Orderers, etc.  This is the part where most of the changes to the original Fabric will be implemented.
+Hyperledger Fabric is the core of the system. It implements the Fabric's network components: Peers, Orderers, etc. This is the part where most of the changes to the original Fabric will be implemented.
 
 Alongside Fabric's core, the project provides the developer with an SDK for building client applications. The SDK is implemented in several different languages: Go, Node.js, Python, and Java. In this project, we use and modify the Node.js implementation \cite{lit:fabric-sdk-node}. The SDK provides the developer tools to connect to the network, invoke transactions, run queries, interact with peers, etc.
 
-Another important part of the toolchain is Fabric's shim. It is also implemented in several languages. For this project, we chose the Go implementation of the shim \cite{lit:fabric-shim-go}. The shim is used to write chaincode and access world state's kv-ledger functionality: get and put a value, query a range of keys etc. The shim is not modified in this project.
+Another important part of the toolchain is Fabric's shim. It is also implemented in several languages. For this project, we chose the Go implementation of the shim \cite{lit:fabric-shim-go}. The shim is used to write chaincode and access world state's kv-ledger functionality: get and put a value, query a range of keys, etc. The shim is not modified in this project.
 
 And finally, the benchmarking tools. To write and run benchmarks we use a modified version of Hyperledger Caliper \cite{lit:caliper} and we use HyperLedgerLab \cite{lit:hyperledgerlab} to set up the infrastructure and orchestrate the benchmarking process.
 
@@ -56,7 +56,7 @@ Certificate authority issues and confirms certificates that are used to establis
 
 \section{Transaction flow}
 \label{sec:flow}
-This section describes a transaction flow or a transaction's lifecycle. The section is based on \cite{fabricdocs:flow},  \cite{fabricdocs:peer} and \cite{fabricdocs:orderer}
+This section describes a transaction flow or a transaction's lifecycle. The section is based on \cite{fabricdocs:flow, fabricdocs:peer, fabricdocs:orderer}
 
 Fabric's transaction lifecycle consists of three phases
 \begin{itemize}
@@ -68,7 +68,7 @@ Fabric's transaction lifecycle consists of three phases
 Let's say a client application wants to perform a transaction. It creates a transaction proposal and sends it to all peers whose signature is required, according to channels endorsement policy.
 A peer receives the transaction proposal, checks that a client has necessary rights etc and executes it against the current ledger. The execution yields a read-write set. The set contains the keys which are read from and written to during the execution. The read part of the set also contains version value for each key. Versions are used later in the validation phase. The write part of the set contains keys and values that are to be written to commit the transaction to the ledger. The read-write set is then included in the response to the client and signed by the peer. The resulting structure is sent to the client. This concludes the Proposal phase.
 
-When the client has collected all the required endorsements it checks them for consistency, packs them into a transaction envelope and sends the envelope to the ordering service. There can be different implementations of the ordering service, but they all perform the same function. The orderer receives transaction envelopes from different clients and assembles the incoming envelopes into blocks. After a  block is created, the order of transactions within it is fixed. The orderer then distributes the newly created block among the peers of the channel. This concludes the Ordering phase.
+When the client has collected all the required endorsements it checks them for consistency, packs them into a transaction envelope and sends the envelope to the ordering service. There can be different implementations of the ordering service, but they all perform the same function. The orderer receives transaction envelopes from different clients and assembles the incoming envelopes into blocks. After a block is created, the order of transactions within it is fixed. The orderer then distributes the newly created block among the peers of the channel. This concludes the Ordering phase.
 
 When a peer receives a block it goes through all transactions in the exact order they appear in the block. The peer checks signatures of a transaction and makes sure that it complies with the endorsement policy. Read-write sets from different endorsements are also checked for consistency. If a transaction passes all checks, the peer attempts to apply it to the ledger. Before applying a transaction, a ledger consistency check is done. The peer checks versions of the read keys to see if any of the keys were modified after the proposal was endorsed. If ledger state is compatible with the transaction, the transactions write set is applied and the transaction is marked as valid within the block. Invalid transactions are not applied but are marked as invalid and kept for accounting. The block is then appended to the chain and stored. Finally, the peer generates events, signaling to all subscribers which transactions were commited. This concludes the final phase of a transaction's lifecycle.
 
@@ -84,7 +84,7 @@ rpc ProcessProposal(SignedProposal) returns (ProposalResponse) {}
 \end{lstlisting}
 SignedProposal is a structure sent by a client at the beginning of a transaction's lifecycle.
 
-The Endorser subsystem executes the proposal, produces a read-write set as a result of the execution and creates a ProposalResponse which is used as an endorsement of the proposal by the client.  This subsystem has no direct access to the ledger. Access is provided indirectly through a transaction simulator (TxSimulator) produced by an endorser Support interface.
+The Endorser subsystem executes the proposal, produces a read-write set as a result of the execution and creates a ProposalResponse which is used as an endorsement of the proposal by the client. This subsystem has no direct access to the ledger. Access is provided indirectly through a transaction simulator (TxSimulator) produced by an endorser Support interface.
 
 The Gossip subsystem handles all communications between all nodes of the network: peers and orderers alike. It is a big and intricate subsystem in and of itself and consists of many moving parts. However, for the purposes of the project, it is enough to know that Gossip handles block distribution and has capabilities to commit a block to the ledger.
 

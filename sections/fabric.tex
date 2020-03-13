@@ -39,7 +39,7 @@ The new transaction lifecycle is, roughly as follows
 
 The Propose phase is exactly the same as the original one.
 
-The client collects proposal responses and creates a transaction envelope as usual.  But instead of sending it to the ordering service, the client broadcasts the transaction envelope to all peers of the network.
+The client collects proposal responses and creates a transaction envelope as usual. But instead of sending it to the ordering service, the client broadcasts the transaction envelope to all peers of the network.
 
 A peer receives the envelope and does signature validation as per the original protocol. However, the peer does not perform any MVCC consistency check. Since we assume only conflict-free transactions, there is no point in doing consistency checks. The burden of keeping transactions conflict-free lies on the chaincode creator.
 
